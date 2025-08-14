@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{title}}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta property="og:title" content="{{title}}">
+    <meta property="og:description" content="girlglock.com">
+    <meta property="og:video" content="{{mediaUrl}}">
+    <meta property="og:video:type" content="video/{{mediaType}}">
+    <meta property="og:video:width" content="1280">
+    <meta property="og:video:height" content="720">
+    <meta property="twitter:card" content="player">
+    <meta property="twitter:player:stream" content="{{mediaUrl}}">
+    <meta property="twitter:player:stream:content_type" content="video/{{mediaType}}">
+    <style>
+        @font-face {
+            font-family: 'ArialPixel';
+            src: url('https://cdn.jsdelivr.net/gh/ekmas/cs16.css@main/ArialPixel.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'ArialPixel';
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow: hidden;
+            position: relative;
+            text-align: center;
+            background-color: #000;
+        }
+
+        .bg-media {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            filter: blur(20px) brightness(0.3) contrast(1.2);
+            z-index: -1;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+
+        .box {
+            max-width: 90vw;
+            max-height: 80vh;
+            z-index: 1;
+        }
+
+        img,
+        video.main-media {
+            max-width: 80vw;
+            max-height: 60vh;
+            object-fit: contain;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 80vw;
+            z-index: 1;
+        }
+
+        .info strong {
+            font-size: 18px;
+        }
+
+        a,
+        p {
+            color: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        {{mediaTag}}
+    </div>
+
+    <div class="info box">
+        <strong>{{title}}</strong><br>
+        {{description}}<br>
+        {{fileSize}} MB • {{mediaType}} • {{views}} views
+    </div>
+
+    <div class="bg-overlay"></div>
+
+    <script>
+        const mainMedia = document.querySelector('.main-media');
+        if (mainMedia && mainMedia.dataset.type === 'video') {
+            const bgVideo = document.createElement('video');
+            bgVideo.muted = true;
+            bgVideo.loop = true;
+            bgVideo.playsInline = true;
+            bgVideo.className = 'bg-media';
+
+            const source = document.createElement('source');
+            source.src = mainMedia.querySelector('source').src;
+            source.type = mainMedia.querySelector('source').type;
+            bgVideo.appendChild(source);
+            document.body.appendChild(bgVideo);
+
+            bgVideo.addEventListener('loadeddata', () => {
+                bgVideo.play().catch(err => console.error('Error playing background video:', err));
+                setTimeout(() => {
+                    bgVideo.pause();
+                    bgVideo.currentTime = 0;
+                }, 50);
+            });
+
+            mainMedia.addEventListener('play', () => bgVideo.play());
+            mainMedia.addEventListener('pause', () => bgVideo.pause());
+
+            mainMedia.addEventListener('timeupdate', () => {
+                const diff = mainMedia.currentTime - bgVideo.currentTime;
+                if (Math.abs(diff) > 0.1) {
+                    bgVideo.currentTime = mainMedia.currentTime;
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
