@@ -130,6 +130,14 @@
             mainMedia.addEventListener('play', () => bgVideo.play());
             mainMedia.addEventListener('pause', () => bgVideo.pause());
 
+            mainMedia.addEventListener('seeked', () => {
+                bgVideo.currentTime = mainMedia.currentTime;
+            });
+
+            mainMedia.addEventListener('seeking', () => {
+                bgVideo.currentTime = mainMedia.currentTime;
+            });
+
             mainMedia.addEventListener('timeupdate', () => {
                 const diff = mainMedia.currentTime - bgVideo.currentTime;
                 if (Math.abs(diff) > 0.1) {
