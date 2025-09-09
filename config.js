@@ -1,5 +1,5 @@
 module.exports = {
-  allowedHost: 'i.girlglock.com',
+  allowedHost: 'localhost:3000',
   PORT: 3000,
 
   fileHost: {
@@ -31,4 +31,5 @@ module.exports = {
   themeColor: '#1bb76e',
   backgroundImage: 'https://files.catbox.moe/likszt.png',
   cssFramework: 'https://cdn.jsdelivr.net/gh/ekmas/cs16.css@main/css/cs16.min.css'
+
 };
