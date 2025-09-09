@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const { generateHTML } = require('./services/templateService');
+const { incViews } = require('./services/cacheService');
 const app = express();
 const https = require('https');
 const http = require('http');
@@ -38,6 +39,7 @@ function extractMediaId(url) {
 
 async function getMediaInfo(mediaId) {
   const url = `${config.fileHost.baseUrl}/${mediaId}`;
+  const thumbnailUrl = config.fileHost.thumbnailUrl(mediaId);
   let extension = mediaId.includes('.') ? mediaId.split('.').pop().toLowerCase() : null;
 
   try {
@@ -56,7 +58,9 @@ async function getMediaInfo(mediaId) {
     return {
       link: url,
       size: contentLength,
-      type: extension,
+      type: isVideo ? 'video' : "image",
+      extension: extension,
+      thumbnail: thumbnailUrl,
       isVideo
     };
   } catch {
@@ -87,6 +91,9 @@ app.get('/:mediaId', async (req, res) => {
   try {
     const mediaInfo = await getMediaInfo(cleanId);
 
+    //check for ?t=1 to embed thumbnail instead of full video
+    const embedThumb = req.query.t === '1';
+
     if (!mediaInfo) {
       return res.status(404).send('media not found ow unsuppowted file type');
     }
@@ -97,11 +104,12 @@ app.get('/:mediaId', async (req, res) => {
       const fileUrl = new URL(mediaInfo.link);
       const client = fileUrl.protocol === 'https:' ? https : http;
 
-      res.setHeader('Content-Type', mediaInfo.isVideo ? `video/${mediaInfo.type}` : `image/${mediaInfo.type}`);
+      res.setHeader('Content-Type', `image/${mediaInfo.type}`);
       res.setHeader('Content-Length', mediaInfo.size);
 
       client.get(fileUrl, (fileStream) => {
         fileStream.pipe(res);
+        incViews(mediaId);
       }).on('error', (err) => {
         console.error('Error streaming media:', err);
         res.status(500).send('failed to load media');
@@ -113,11 +121,13 @@ app.get('/:mediaId', async (req, res) => {
     const html = generateHTML({
       mediaId: cleanId,
       mediaUrl: mediaInfo.link,
-      mediaType: mediaInfo.type,
+      embedUrl: embedThumb ? mediaInfo.thumbnail : mediaInfo.link,
+      mediaExt: embedThumb ? 'webp' : mediaInfo.extension,
+      mediaType: embedThumb ? 'image' : mediaInfo.type,
       mediaSize: mediaInfo.size,
       isVideo: mediaInfo.isVideo,
       title: cleanId,
-      description: config.siteDescription || 'girlglock.com'
+      description: config.siteDescription || '<a href="https://girlglock.com" target="_blank" rel="noopener noreferrer">girlglock.com</a>'
     });
 
     res.set({

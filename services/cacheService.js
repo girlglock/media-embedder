@@ -31,6 +31,7 @@ function incViews(mediaId) {
     const cache = loadCache();
     cache[mediaId] = { ...(cache[mediaId] || {}), views: (cache[mediaId]?.views || 0) + 1 };
     saveCache(cache);
+    console.log("Views Increased for: " + mediaId + " - Current Views: " + ((cache[mediaId]?.views || 0) + 1))
 }
 
 module.exports = { getViews, incViews };
